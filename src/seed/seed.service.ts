@@ -18,13 +18,21 @@ export class SeedService {
   private readonly axios: AxiosInstance = axios;
 
   async executeSeed() {
-    const { data } = await this.axios.get<PokeResponse>('https://pokeapi.co/api/v2/pokemon?limit=10');
-    data.results.forEach(async ({name, url}) => {
-      const segments = url.split('/');
-      const no = +segments[segments.length -2];
 
-      const pokemon = await this.pokemonModel.create({ no, name });
+    await this.pokemonModel.deleteMany({});
+
+    const { data } = await this.axios.get<PokeResponse>('https://pokeapi.co/api/v2/pokemon?limit=650');
+
+    const pokemonToInsert: { no: number, name: string }[] = [];
+
+    data.results.forEach(({ name, url }) => {
+      const segments = url.split('/');
+      const no = +segments[segments.length - 2];
+
+      pokemonToInsert.push({no, name});
     })
+
+    await this.pokemonModel.insertMany(pokemonToInsert);
 
     return 'Seed Executed';
   }
